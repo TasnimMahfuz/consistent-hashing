@@ -7,6 +7,7 @@ map<string, vector<string>> server_pool;
 int hash_string(string value);
 void add_server(string server_name);
 void add_key(string key);
+void remove_key(string key);
 void remove_server(string server_name);
 void print_server_keys(string server_name);
 
@@ -36,6 +37,9 @@ int main()
     add_key("four");
 
     add_server("130");
+
+    remove_key("seven");
+    remove_key("four");
 }
 
 int hash_string(string value)
@@ -188,6 +192,41 @@ void add_key(string key)
         }
     }
 
+}
+
+void remove_key(string key)
+{
+    int key_hash = hash_string(key);
+    int key_server_hash = hash_ring[key_hash].second;
+
+    if(key_server_hash == -1)
+    {
+        cout<<"The key <"<<key<<"> does not exist in the server.\n\n";
+        cout<<"###################################################\n";
+        return;
+    }
+
+    cout<< "Before removing, the main server contains: ";
+    print_server_keys(hash_ring[key_server_hash].first);
+
+    auto it = server_pool.find(hash_ring[key_server_hash].first);
+
+    if(it != server_pool.end())
+    {
+        auto &vec = it -> second;
+        vec.erase(remove(vec.begin(), vec.end(), key), vec.end());
+    }
+
+    cout<< "\n\nAfter removing, the main server contains: ";
+    print_server_keys(hash_ring[key_server_hash].first);
+
+    cout<<"Remove from server successful!\n";
+
+    hash_ring[key_hash] = {"empty", -1};
+
+    cout<<"Remove from hash ring successful!\n";
+    cout<<"#######################################################\n\n";
+   
 }
 
 void remove_server(string server_name)
