@@ -39,7 +39,9 @@ int main()
     add_server("130");
 
     remove_key("seven");
-    remove_key("four");
+    //remove_key("four");
+
+    remove_server("130");
 }
 
 int hash_string(string value)
@@ -231,6 +233,68 @@ void remove_key(string key)
 
 void remove_server(string server_name)
 {
+    int server_to_remove_hash = hash_string(server_name);
+    string next_server;
+
+    if(hash_ring[server_to_remove_hash].second != 2025)
+    {
+        cout<<"The server you want to remove does not exist!\n";
+        return;
+    }
+
+    for(int i = server_to_remove_hash + 1;  ; i++)
+    {
+        
+        if(i == 509)
+            i = 0;
+        if(i == server_to_remove_hash)
+        {
+            cout<<"This is the only server. So, you can not remove it!\n";
+            return;
+        }
+
+        if(hash_ring[i].second == 2025)
+        {
+            next_server = hash_ring[i].first;
+            cout<<"The next server is : <"<<next_server<<">\n";
+            break;
+        }
+    }
+    vector<string> keys_to_be_transferred = server_pool[server_name];
+    hash_ring[server_to_remove_hash] = {"empty", -1};
+    cout<<"The server has successfully been removed from hash ring!\n";
+
+    auto it = server_pool.find(server_name);
+    if(it != server_pool.end()){
+        server_pool.erase(it);
+        cout<<"The server has successfully been removed from server pool!\n";
+    }
+
+    cout<<"The removed server contained: ";
+    for(int i = 0; i < keys_to_be_transferred.size(); i++)
+        cout<<"<"<< keys_to_be_transferred[i]<<">\t";
+    cout<<endl<<endl;
+
+    cout<<"We will add these keys to the server: <"<<next_server<<">\n";
+    cout<<"It currently contains: ";
+
+    print_server_keys(next_server);
+
+    for(int i = 0; i < keys_to_be_transferred.size(); i++)
+    {
+        int next_server_hash = hash_string(next_server);
+        int this_key_hash = hash_string(keys_to_be_transferred[i]);
+
+        hash_ring[i] = {keys_to_be_transferred[i], next_server_hash};
+        cout<<"Key <"<<keys_to_be_transferred[i]<<"> added to hash ring.\n";
+
+        server_pool[next_server].push_back(keys_to_be_transferred[i]);
+        cout<<"Key <"<<keys_to_be_transferred[i]<<"> added to the server pool.\n";
+
+    }
+
+    cout<<"\n\nKey transfer complete! It now contains: ";
+    print_server_keys(next_server);
 
 }
 
